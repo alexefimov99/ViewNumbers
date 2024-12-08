@@ -104,6 +104,7 @@ class NumberMemory:
         self.mistakes_counter = 0
         self.odd = False
         self.filename = ""
+        self.speed_view = int()
 
         self.prepareWindow()
 
@@ -145,6 +146,9 @@ class NumberMemory:
             exit(0)
 
         curr_number = int(0)
+        if self.counter == 0:
+            self.speed_view = Settings.getTimeInterval()
+
         if self.counter < self.NUMBERS_xN[0]:
             if self.odd is False:
                 self.odd = True
@@ -206,7 +210,10 @@ class NumberMemory:
                 file.write(f"All numbers count: {self.max_counter}\n"
                            f"Correct answers was: {self.counter - self.mistakes_counter}\n"
                            f"Anwers with mistake: {self.mistakes_counter}\n"
-                           f"Percentage of correct answers is: {100 - 100 * (self.mistakes_counter) / self.max_counter}%\n")
+                           f"Percentage of correct answers is: "
+                           f"{100 - 100 * (self.mistakes_counter) / self.max_counter}%\n")
+
+                Settings.setTimeInterval(self.speed_view)
 
 
 def parseArgs():
