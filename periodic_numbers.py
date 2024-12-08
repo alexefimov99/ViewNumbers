@@ -114,6 +114,7 @@ class NumberMemory:
         self.root.geometry(Settings.getScreenSize())
 
         self.ready_button = tk.Button(self.root, text="Ready", font=48, command=self.generateNumber)
+        self.root.bind("<Return>", lambda event: self.ready_button.invoke())
         self.setButtonPlace()
 
         self.number_label = tk.Label(self.root, text="", font=48)
