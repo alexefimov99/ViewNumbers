@@ -91,15 +91,19 @@ nums_count: 100
 
 
 class NumberMemory:
+    # 46, 77, 81, 70, 118
     NUMBERS_xN = [ 46, 77, 81, 70, 118 ]
+    RESULT_FILENAME = Path("Results_.txt")
 
     def __init__(self, need_calibrate: bool):
         self.settings_ = Settings()
         self.need_calibrate = need_calibrate
 
-        upgrade_max = sum(self.NUMBERS_xN[0:1])
-        self.max_counter = (upgrade_max + 5) if self.need_calibrate else sum(self.NUMBERS_xN[0:5])
-        self.counter = upgrade_max
+        self.max_counter = 15 if self.need_calibrate else sum(self.NUMBERS_xN[0:5])
+        self.counter = 0
+        self.mistakes_counter = 0
+        self.odd = False
+        self.filename = ""
 
         self.prepareWindow()
 
@@ -127,10 +131,10 @@ class NumberMemory:
         if self.need_calibrate:
             Settings.setTimeInterval(new_interval if new_interval >= 50 else 50)
 
-        if is_number_correct:
-            print("Fuck Yeah")
+        if not is_number_correct:
+            self.mistakes_counter += 1
 
-        # write the result into a file and calc statistics
+        self.writeResults(curr_number, int(user_input))
 
         self.showButton()
 
@@ -142,14 +146,27 @@ class NumberMemory:
 
         curr_number = int(0)
         if self.counter < self.NUMBERS_xN[0]:
+            if self.odd is False:
+                self.odd = True
             curr_number = random.randint(10, 99)
-        elif self.counter < sum(self.NUMBERS_xN[0:1]):
-            curr_number = random.randint(100, 999)
         elif self.counter < sum(self.NUMBERS_xN[0:2]):
-            curr_number = random.randint(1000, 9999)
+            if self.odd is True:
+                self.odd = False
+            curr_number = random.randint(100, 999)
         elif self.counter < sum(self.NUMBERS_xN[0:3]):
-            curr_number = random.randint(10000, 99999)
+            if self.odd is False:
+                self.odd = True
+                Settings.setTimeInterval(int(Settings.getTimeInterval()) + 10)
+            curr_number = random.randint(1000, 9999)
         elif self.counter < sum(self.NUMBERS_xN[0:4]):
+            if self.odd is True:
+                self.odd = False
+                Settings.setTimeInterval(int(Settings.getTimeInterval()) + 10)
+            curr_number = random.randint(10000, 99999)
+        elif self.counter < sum(self.NUMBERS_xN[0:5]):
+            if self.odd is False:
+                self.odd = True
+                Settings.setTimeInterval(int(Settings.getTimeInterval()) + 30)
             curr_number = random.randint(100000, 999999)
 
         self.number_label.place(relx=0.5, rely=0.5, anchor="center")
@@ -171,6 +188,25 @@ class NumberMemory:
     def showButton(self):
         self.setButtonPlace()
         self.ready_button.config(state=tk.ACTIVE)
+
+    def writeResults(self, curr_num: int, user_num: int):
+        if not self.filename:
+            filename_counter = 0
+            self.filename = Path(self.RESULT_FILENAME.name.replace('_', str(filename_counter)))
+            while self.filename.exists():
+                filename_counter += 1
+                self.filename = Path(self.RESULT_FILENAME.name.replace('_', str(filename_counter)))
+
+            self.filename.touch()
+        with open(self.filename, 'a', encoding="utf-8") as file:
+            is_correct = "Correct" if curr_num == user_num else "Mistake"
+            file.write(f"{curr_num}\n{user_num}\n{is_correct}\n\n")
+
+            if self.counter == self.max_counter:
+                file.write(f"All numbers count: {self.max_counter}\n"
+                           f"Correct answers was: {self.counter - self.mistakes_counter}\n"
+                           f"Anwers with mistake: {self.mistakes_counter}\n"
+                           f"Percentage of correct answers is: {100 - 100 * (self.mistakes_counter) / self.max_counter}%\n")
 
 
 def parseArgs():
